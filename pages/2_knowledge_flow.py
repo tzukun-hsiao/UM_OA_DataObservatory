@@ -77,7 +77,7 @@ md_txt = f"""
 st.markdown(md_txt)
 
 md_txt = """
-The figure and table below shows how knowledge in UM publications might diffuse to other disciplines, as indicated by citation linkages.
+Figures below shows how knowledge in UM publications might diffuse to other disciplines, as indicated by citation linkages.
 A citation indicates a potential knowledge flow from the cited article to the citing article.
 In the figure, UM publications are the cited articles and are grouped by their disciplines.
 The width of lines are proportional to citation counts.
