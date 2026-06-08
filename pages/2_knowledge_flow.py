@@ -157,8 +157,8 @@ st.caption(md_txt)
 
 md_txt = f"""
 The figure below shows data for the selected disciplines and article type.
-- Disciplines: {selected_fields_str}  
-- Article type: {article_type_str}
+- Disciplines selected: {selected_fields_str}  
+- Article type selected: {article_type_str}
 """
 st.markdown(md_txt)
 
