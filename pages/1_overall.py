@@ -29,7 +29,7 @@ pubs = load_data(file_name='UM_publications_SelectedCols.csv')
 pubs['Is_OA'] = 'Closed'
 pubs.loc[pubs['Open Access'] != 'Closed', 'Is_OA'] = 'Open Access' 
 pubs['Open Access2'] = pubs['Open Access']
-pubs['OA Type'] = pubs['Open Access2'].str.replace('All OA; ', 'OA: ')
+pubs['OA Type'] = pubs['Open Access2'].str.replace('All OA; ', '')
 
 # Stacked bar chart - Yearly Number of OA articles
 md_txt = '''
@@ -38,9 +38,15 @@ md_txt = '''
 st.markdown(md_txt)
 
 md_txt = f"""
-From 2016 to 2025, the share of open access publications increased from 43.6% to 56.2%.
+From 2016 to 2025, the share of open access (OA) publications increased from 43.6% to 56.2%.
 Research articles and review articles both showed substantial growth in open access publishing in the past ten years.
 The proportion of open access research articles continued to increase between 2016 and 2024, reaching a peak of 70.0% in 2024.
+"""
+st.markdown(md_txt)
+
+md_txt = f"""
+Below is an interactive data observatory where you can explore open access trends by article type.   
+Simply select an article type from the dropdown menu below, and the plot will update automatically.
 """
 st.markdown(md_txt)
 
@@ -68,17 +74,23 @@ df_oa_or_not = df_oa_or_not.rename(columns={'Publication ID': 'Publication Count
 df_oa_or_not['%'] = df_oa_or_not['Publication Count'] / df_oa_or_not.groupby(['PubYear'])['Publication Count'].transform('sum') * 100
 df_oa_or_not['%'] = df_oa_or_not['%'].round(1)
 
-fig = px.bar(data_frame=oa_yr_count, x='Is_OA', y='Publication Count', facet_col='PubYear',
-             color='OA Type', 
-             labels={"PubYear": "PY"},
-             title=f'Yearly Number of Closed/OA Publications; Article type: {pub_type_selected}',
-             color_discrete_map= {'Closed': '#847996', 'OA: Green': '#66A3A0', 
-                                  'OA: Gold': '#CCA63E', 'OA: Bronze': '#715B1E', 'OA: Hybrid': '#486BC4'})
+fig = px.bar(
+    data_frame=oa_yr_count, x='Is_OA', y='Publication Count', facet_col='PubYear',
+    color='OA Type', 
+    labels={"PubYear": "PY"},
+    title=f'Yearly Number of Closed/OA Publications<br>Article type: {pub_type_selected}',
+    color_discrete_map= {'Closed': '#847996', 'Green': '#66A3A0', 
+                         'Gold': '#CCA63E', 'Bronze': '#715B1E', 
+                         'Hybrid': '#486BC4'},
+    hover_data={'OA Type': True, 'Publication Count': True,
+                'Is_OA': False, 'PubYear': False}
+)
 fig.update_xaxes(title_text=None)
-fig
+fig.update_layout(height=500, hovermode="x unified")
+st.plotly_chart(fig)
 
 st.text('\n\n')
-if st.checkbox('Show OA types in table below:'):
+if st.checkbox('Select to show OA types in table below:'):
     st.dataframe(oa_yr_count.set_index('PubYear'))
 else:
     st.dataframe(df_oa_or_not)
@@ -115,13 +127,10 @@ else:
     article_type_str = article_type
 
 disc_size = selected_df.groupby(['dicsipline'])[['Publication ID']].count()
-disc_top = disc_size.sort_values(by=['Publication ID'], ascending=False).head(1).index.tolist()[0]
 
 openness = selected_df.groupby(['dicsipline', 'Is_OA'])[['Publication ID']].count().reset_index()
 openness = openness.rename(columns={'Publication ID': 'Publication Count'})
 openness['pct'] = openness['Publication Count'] / openness.groupby(['dicsipline'])['Publication Count'].transform('sum') * 100
-
-#st.write(openness.loc[openness['pct']>50])
 
 line_df = selected_df.groupby(['dicsipline', 'PubYear', 'Is_OA'])[['Publication ID']].count().reset_index()
 line_df = line_df.rename(columns={'Publication ID': 'Publication Count'})
@@ -130,11 +139,24 @@ line_df['dicsipline_pct'] = line_df['Publication Count'] / line_df.groupby(['dic
 desired_order = ['Open Access', 'Closed']
 bar_fig = px.bar(openness, x='dicsipline', y='pct', color='Is_OA', barmode='stack', 
                  category_orders={'Is_OA': desired_order},
+                 color_discrete_map={'Open Access': '#92D678', 
+                                     'Closed': '#646464'},
                  labels={'pct': '% of Publications'}, 
-                 title=f'Openness of Publications<br>Article type: {article_type_str}')
-bar_fig.update_layout(legend=dict(orientation="h", y=1.65, x=1,xanchor="right"),
-                      margin=dict(t=150))
-bar_fig.update_xaxes(tickmode='array', tickvals=openness['dicsipline'].unique(),)
+                 title=f'Openness of Publications<br>Article type: {article_type_str}',
+                 hover_data={'dicsipline': False, 'pct': ':.1f', 'Is_OA': True})
+bar_fig.update_layout(legend=dict(orientation="h", y=1.5, x=1,xanchor="right"),
+                      xaxis_title=None,
+                      hovermode="x unified",
+                      margin=dict(t=150),
+                      legend_title=None, 
+                      height=470)
+fig.update_traces(
+    hovertemplate=
+    "OA Status: %{x}<br>" +
+    "Percentag of Publications: %{y}<br>" +
+    "<extra></extra>"
+)
+bar_fig.update_xaxes(tickmode='array', tickvals=openness['dicsipline'].unique())
 
 col1, col2 = st.columns(2)
 with col1:
@@ -151,16 +173,25 @@ if event.selection.points:
     selected_discipline = event.selection.points[0]["x"]
 
 if selected_discipline is None:
-    selected_discipline = disc_top
+    selected_discipline = line_df["dicsipline"].sort_values().tolist()[0]
 
 filtered_line_df = line_df[line_df["dicsipline"] == selected_discipline]
 
-line_fig = px.line(filtered_line_df.sort_values("PubYear"),
+line_fig = px.line(filtered_line_df.sort_values(by=['PubYear']),
                    x="PubYear", y="Publication Count", color="Is_OA", markers=True,
+                   color_discrete_map={'Open Access': '#92D678', 'Closed': '#646464'},
+                   category_orders={'Is_OA': desired_order},
                    title='Number of Closed/OA Articles in:<br>' + selected_discipline)
 
-line_fig.update_layout(legend=dict(orientation="h", y=1.2, x=1,xanchor="right"),
-                       margin=dict(t=150))
+line_fig.update_layout(legend=dict(orientation="h", y=1.1, x=1,xanchor="right"),
+                       xaxis_title=None,
+                       margin=dict(t=140), 
+                       legend_title=None, 
+                       height=520)
+
+line_fig.update_xaxes(type="category", categoryorder="array",
+                      categoryarray=filtered_line_df['PubYear'].tolist(),
+                      dtick=2)
 
 with col2:
     st.plotly_chart(line_fig, key="line")

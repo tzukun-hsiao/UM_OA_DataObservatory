@@ -40,7 +40,6 @@ def gini(input_vals):
     return gini_value
 
 
-
 pubs = load_data(file_name='UM_publications_SelectedCols.csv')
 pubs = pubs.rename(columns={'Publication ID': 'cited_PublicationID', 
                             'PubYear': 'cited_PubYear'})
@@ -78,13 +77,18 @@ md_txt = f"""
 st.markdown(md_txt)
 
 md_txt = """
-The table and figure below shows how knowledge in UM publications might diffuse to other disciplines, as indicated by citation linkages.
+The figure and table below shows how knowledge in UM publications might diffuse to other disciplines, as indicated by citation linkages.
 A citation indicates a potential knowledge flow from the cited article to the citing article.
 In the figure, UM publications are the cited articles and are grouped by their disciplines.
 The width of lines are proportional to citation counts.
 The higher the citation count is, the wider the line is.
 """
 st.write(md_txt)
+
+md_txt = f"""
+The table and figures are interactive. They automatically update based on your selections.
+"""
+#st.markdown(md_txt)
 
 
 kf_field_g = kf_field.groupby(['cited_ResearchField'])[['cited_PublicationID']].nunique()
@@ -129,7 +133,7 @@ for um_pub_field in selected_fields:
         n_pubs = um_selected2['cited_PublicationID'].nunique()
         n_cits = um_selected2['citing_PublicationID'].nunique()
 
-        um_selected_g = um_selected2.groupby('citing_ResearchField')[['citing_PublicationID']].count()
+        um_selected_g = um_selected2.groupby('citing_ResearchField')[['citing_PublicationID']].nunique()
         n_citing_disc = len(um_selected_g)
         gini_cit = gini(um_selected_g['citing_PublicationID'].tolist())
 
@@ -141,30 +145,24 @@ df_tbl_out['Evenness'] = df_tbl_out['Evenness'].round(2)
 
 selected_fields_str = ', '.join(selected_fields)
 
+tot_or_avg = st.selectbox(label='Select how citations are calculated:', 
+                          options=['Total number of citations', 'Average citations per article'], 
+                          index=0, key='total_or_average')
+
+md_txt = """
+- Total number of citations: The total number of citation received by articles in a discipline.
+- Average citations per article: The total number of citations divided by the number of articles in the cited discipline.
+"""
+st.caption(md_txt)
+
 md_txt = f"""
-Disciplines selected: {selected_fields_str}  
-Article type selected: {article_type_str}
+The figure below shows data for the selected disciplines and article type.
+- Disciplines: {selected_fields_str}  
+- Article type: {article_type_str}
 """
 st.markdown(md_txt)
 
-md_txt = """
-The table below shows the number of unique disciplines that cite a selected discipline.
-"""
-st.write(md_txt)
-st.write(df_tbl_out)
-
-md_txt = '''
-- *Evenness* measures how evenly citations were distributed across disciplines.  
-- Evenness values were calculated using Gini index.
-The values ranges from 0 to 1. (0 = perfect equality; 1 = prefect inequality)
-'''
-st.caption(md_txt)
-
-tot_or_avg = st.selectbox(label='Select how citations are calculated:', 
-                          options=['Total number of citations', 'Average number of citations'], 
-                          index=0, key='total_or_average')
-
-if tot_or_avg == 'Average number of citations':
+if tot_or_avg == 'Average citations per article':
     df_plt = df_data.groupby(['cited_ResearchField', 'cited_ResearchField_OA',
                               'citing_ResearchField']).agg({'citing_PublicationID': 'count', 
                                                             'cited_PublicationID': 'nunique'})
@@ -177,6 +175,8 @@ else:
     df_plt = df_data.groupby(['cited_ResearchField', 'cited_ResearchField_OA',
                               'citing_ResearchField'])[['citing_PublicationID']].count().reset_index()
     df_plt = df_plt.rename(columns={'citing_PublicationID': 'citation_count'})
+
+df_plt['Is_OA'] = df_plt['cited_ResearchField_OA'].str.split(', ').str[-1]
 
 left_nodes = selected_fields
 middle_nodes = []
@@ -195,28 +195,43 @@ labels_display = left_nodes + middle_nodes + right_nodes
 
 label_to_id = {label: i for i, label in enumerate(labels_internal)}
 
-# First set of links
-source2 = df_plt['cited_ResearchField'].apply(lambda x: label_to_id['l_' + x])
-target2 = df_plt['cited_ResearchField_OA'].apply(lambda x: label_to_id['m_' + x])
-value2 = df_plt["citation_count"] 
-
-# First set of links
+# Right set of links
 source1 = df_plt['cited_ResearchField_OA'].apply(lambda x: label_to_id['m_' + x])
 target1 = df_plt['citing_ResearchField'].apply(lambda x: label_to_id['r_' + x])
 value1 = df_plt['citation_count'] 
+
+# Left set of links
+df_plt_g = df_plt.groupby(['cited_ResearchField', 
+                           'cited_ResearchField_OA']).agg({'citation_count': 'sum', 
+                                                           'citing_ResearchField': 'nunique'})
+df_plt_g = df_plt_g.reset_index()
+df_plt_g['Is_OA'] = df_plt_g['cited_ResearchField_OA'].str.split(', ').str[-1]
+ 
+source2 = df_plt_g['cited_ResearchField'].apply(lambda x: label_to_id['l_' + x])
+target2 = df_plt_g['cited_ResearchField_OA'].apply(lambda x: label_to_id['m_' + x])
+value2 = df_plt_g["citation_count"] 
 
 source = list(source1) + list(source2)
 target = list(target1) + list(target2)
 value = list(value1) + list(value2)
 
-link_colors = []
+link_colors1 = []
 for oa_label in df_plt['cited_ResearchField_OA'].tolist():
     if oa_label[-2:] == 'OA':
         link_clr = "rgba(0,150,0,0.4)"
-        link_colors.append(link_clr)
+        link_colors1.append(link_clr)
     else:
         link_clr = "rgba(100,100,100,0.4)"
-        link_colors.append(link_clr)
+        link_colors1.append(link_clr)
+
+link_colors2 = []
+for oa_label in df_plt_g['cited_ResearchField_OA'].tolist():
+    if oa_label[-2:] == 'OA':
+        link_clr = "rgba(0,150,0,0.4)"
+        link_colors2.append(link_clr)
+    else:
+        link_clr = "rgba(100,100,100,0.4)"
+        link_colors2.append(link_clr)
 
 palette = px.colors.qualitative.Set1
 field_color_map = {}
@@ -240,6 +255,32 @@ for label in labels_display:
         color = f"rgba({rgb},0.6)"
     node_colors.append(color)
 
+hover_text1 = [
+    (
+        f"Knowledge Flow Diresction:{cited_field} → {citing_filed}<br>"
+        #f"Cited field: {cited_field}<br>"
+        #f"Citing field: {citing_filed}<br>"
+        f"OA status of UM publications: {oa_type}<br>"
+        f"Citations: {cnt/1000:.1f}k"
+    )
+    for oa_type, cited_field, citing_filed, cnt in zip(
+        df_plt['Is_OA'],
+        df_plt['cited_ResearchField'],
+        df_plt['citing_ResearchField'],
+        df_plt['citation_count']
+    )
+]
+
+hover_text2 = [
+    f"OA status of UM publications: {oa_type}<br>Citations: {cnt/1000:.1f}k"
+    for oa_type, cnt in zip(
+        df_plt_g['Is_OA'],
+        df_plt_g['citation_count']
+    )
+]
+
+hover_text = hover_text1 + hover_text2
+
 y_left = [0.05 + i * 0.9 / (len(left_internal)) for i in range(len(left_internal))]
 y_middle = [0.05 + i * 0.9 / (len(middle_internal) -1) for i in range(len(middle_internal))]
 y_right = [
@@ -257,14 +298,17 @@ fig = go.Figure(data=[go.Sankey(
         x = x_positions,
         y = y_positions,
         label = labels_display,
-        color = node_colors
+        color = node_colors,
+        hovertemplate="<extra></extra>"
     ),
     link=dict(
         #arrowlen=15,
         source = source,
         target = target,
         value = value,
-        color = link_colors + link_colors
+        color = link_colors1 + link_colors2,
+        customdata=hover_text,
+        hovertemplate="%{customdata}<extra></extra>"
     )
 )])
 
@@ -295,13 +339,24 @@ fig.update_layout(
 
 st.plotly_chart(fig, width='content')
 cap_txt = '''
-- The width of lines are proportional to citation counts.
-The higher the citation count is, the wider the line is.
-- Green lines indicate citations to open access articles.
-- Gray lines indicates citations to closed access articles
-- *Average number of citations*: The number of citations from a citing discipline is divided by the number of articles in the cited discipline.
+- The width of lines are proportional to citation counts. The higher the citation count is, the wider the line is.
+- Green lines indicate citations received by open access articles.
+- Gray lines indicates citations received by closed access articles
 '''
 st.caption(cap_txt)
+
+md_txt = """
+The table below shows the number of unique disciplines that cite a selected discipline.
+"""
+#st.write(md_txt)
+#st.write(df_tbl_out)
+
+md_txt = '''
+- *Evenness* measures how evenly citations were distributed across disciplines.  
+- Evenness values were calculated using Gini index.
+The values ranges from 0 to 1. (0 = perfect equality; 1 = prefect inequality)
+'''
+#st.caption(md_txt)
 
 # Article level results
 md_txt = f"""
@@ -325,6 +380,7 @@ fig, ax = plt.subplots(figsize=(15, 6))
 sns.boxplot(data=df_plt, 
             x="cited_ResearchField", y="FCR", hue="Is_OA", 
             fill=False, gap=.1,
+            palette={"OA": "#009600", "Closed": "#646464"},
             #log_scale= 2,
             #whis = (0.0, 1.0),
             ax=ax)
@@ -344,7 +400,7 @@ st.caption(cap_txt)
 
 # Annual citations
 md_txt = f"""
-#### Annual Citations per Paper, by Publication Year and OA Status
+#### Annual Citations per Article, by Publication Year and OA Status
 """
 st.markdown(md_txt)
 annual_data = kf_field.loc[kf_field['Document Type']=='Research Article']
@@ -374,10 +430,19 @@ fig = px.bar(
     x="citing_PubYear",
     y="citation_per_paper",
     color="Is_OA",
+    color_discrete_map={'OA': 'rgb(0,150,0)', 'Closed': 'rgb(100,100,100)'},
     facet_row="cited_PubYear",   # one row per publication year
     barmode="group",
     title=f"Showing results for {article_field_str}",
-    category_orders={"citing_PubYear": year_order}
+    category_orders={"citing_PubYear": year_order},
+    hover_data={'citation_per_paper': ':.1f', 'citing_PubYear': True, 'Is_OA': True}
+)
+fig.update_traces(
+    hovertemplate=
+    "Citation year: %{x}<br>" +
+    "Citation per article: %{y:.1f}<br>" +
+    "OA Type: %{fullData.name}<br>" +
+    "<extra></extra>"
 )
 
 fig.for_each_annotation(
