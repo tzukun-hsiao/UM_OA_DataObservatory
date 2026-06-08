@@ -12,7 +12,7 @@ from github import Github, Auth
 def load_data(file_name):
     auth = Auth.Token(st.secrets["GITHUB_TOKEN"])
     g = Github(auth=auth)
-    repo = g.get_repo("tzukun-hsiao/DataMisc")
+    repo = g.get_repo(st.secrets["DATA_REPO"])
 
     file = repo.get_contents(f'OA_DataObservatory/{file_name}')
 
