@@ -77,18 +77,16 @@ md_txt = f"""
 st.markdown(md_txt)
 
 md_txt = """
-Figures below shows how knowledge in UM publications might diffuse to other disciplines, as indicated by citation linkages.
+Figure below shows how knowledge in UM publications might diffuse to other disciplines, as indicated by citation linkages.
 A citation indicates a potential knowledge flow from the cited article to the citing article.
 In the figure, UM publications are the cited articles and are grouped by their disciplines.
 The width of lines are proportional to citation counts.
 The higher the citation count is, the wider the line is.
+
+Using the dropdown menus below, you can choose to visualize data for the discipline(s) and 
+article type of your choice.
 """
 st.write(md_txt)
-
-md_txt = f"""
-The table and figures are interactive. They automatically update based on your selections.
-"""
-#st.markdown(md_txt)
 
 
 kf_field_g = kf_field.groupby(['cited_ResearchField'])[['cited_PublicationID']].nunique()
@@ -156,7 +154,6 @@ md_txt = """
 st.caption(md_txt)
 
 md_txt = f"""
-The figure below shows data for the selected disciplines and article type.
 - Disciplines selected: {selected_fields_str}  
 - Article type selected: {article_type_str}
 """
@@ -411,6 +408,18 @@ md_txt = f"""
 #### Annual Citations per Article, by Publication Year and OA Status
 """
 st.markdown(md_txt)
+
+md_txt = f"""
+Figure below presents the annual citations per article for open-access and non open-access articles..
+The vertical axis shows the publication year of the articles, and the horizontal axis shows the citation year. 
+Each bar represents the average number of citations received per article in a given citation year.
+Regarless of open access or not, anuual citations generally peak around 2-4 years after publication. 
+This pattern reflects the citation lifecycle of scholarly articles, in which research takes time to be discovered, 
+read, and incorporated into later studies.
+However, throughout the citation lifecycle, open-access articles generally receive more 
+citations per article than non open-access articles.
+"""
+
 annual_data = kf_field.loc[kf_field['Document Type']=='Research Article']
 
 article_field = st.selectbox(label='Select a discipline:', 
