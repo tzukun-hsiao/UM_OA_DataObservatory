@@ -62,9 +62,7 @@ kf_field['cited_ResearchField_OA'] = kf_field['cited_ResearchField'] + ', ' + kf
 kf_field = kf_field.merge(cits, how='left')
 kf_field = kf_field.loc[kf_field['citing_PubYear'] >= kf_field['cited_PubYear']]
 
-cit_pair_country = load_data(file_name='citation_pair_countries.csv', 
-                             usecols=["cited_PublicationID", "Is_OA", 
-                                      'citing_PublicationID'])
+cit_pair_country = load_data(file_name='citation_pair_countries.csv')
 #cit_pair_country['cited_ResearchField'] = cit_pair_country['cited_ResearchFields_mjr'].str.split('|')
 #cit_pair_country = cit_pair_country.explode('cited_ResearchField')
 
