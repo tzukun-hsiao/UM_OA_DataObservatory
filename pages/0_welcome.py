@@ -1,5 +1,10 @@
 import streamlit as st
 
+st.set_page_config(
+    page_title="UM Pubs Data Observatory",
+    layout="wide"
+)
+
 st.title("Data Observatory for UM Publications")
 
 md_txt = '''
