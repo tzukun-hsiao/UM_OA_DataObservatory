@@ -429,8 +429,8 @@ country_closed_fig = px.choropleth(
 for country_fig in [country_open_fig, country_closed_fig]:
     country_fig.update_geos(
         showland=True,
-        landcolor="rgba(100, 100, 100, 1)",
-        bgcolor="rgba(0, 0, 0, 0)",
+        landcolor="#808080",
+        bgcolor="#000000",
         domain=dict(y=[0.05, 0.95])
     )
     country_fig.update_layout(
