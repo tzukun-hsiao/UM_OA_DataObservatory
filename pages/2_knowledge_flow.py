@@ -366,6 +366,17 @@ Article type selected: {article_type_str}
 """
 st.markdown(md_txt)
 
+md_txt = f"""
+Figure below presents distribution of Field Citation Ratio (FCR) for the selected disciplines.
+FCR is a age and discipline normalized citation indicator.
+It shows the relative citation performance of an article among articles published in the 
+same year and in the same discipline.
+The FCR is normalized to 1.0. An FCR value of more than 1.0 shows that the publication has 
+a higher than average number of citations, comparing to other articles published in the same 
+year and in the same discipline.
+"""
+st.markdown(md_txt)
+
 #df_tbl_per_pub = [['PID', 'Discipline', 'Closed Access/Open Access',
 #                   'Number of Citing Disciplines', 'FCR']]
 df_tbl_per_pub = df_data.groupby(['cited_PublicationID', 'cited_ResearchField', 'Is_OA', 
@@ -390,9 +401,6 @@ ax.set_ylabel('Field Citation Ratio (FCR)', size=16)
 ax.legend(ncol=2)
 st.write(fig)
 cap_txt = '''
-- The Field Citation Ratio (FCR) is a age and discipline normalized citation indicator.
-It shows the relative citation performance of an article among articles published in the same year and in the same discipline.
-The FCR is normalized to 1.0. An FCR value of more than 1.0 shows that the publication has a higher than average number of citations, comparing to other articles published in the same year and in the same discipline.
 - In consideration of readability, articles with FCR > 50 were omitted in this plot.
 '''
 st.caption(cap_txt)
