@@ -48,7 +48,6 @@ cits = cits.rename(columns={'Publication ID': 'citing_PublicationID',
                             'PubYear': 'citing_PubYear'})
 cits = cits.drop_duplicates()
 
-
 kf_field = load_data(file_name='citation_pairs_kf_SelectedCols.csv')
 kf_field = kf_field.merge(pubs, how='left')
 kf_field['Is_OA'] = 'OA'
@@ -63,6 +62,9 @@ kf_field['cited_ResearchField_OA'] = kf_field['cited_ResearchField'] + ', ' + kf
 kf_field = kf_field.merge(cits, how='left')
 kf_field = kf_field.loc[kf_field['citing_PubYear'] >= kf_field['cited_PubYear']]
 
+cit_pair_country = load_data(file_name='citation_pair_countries.csv')
+cit_pair_country['cited_ResearchField'] = cit_pair_country['cited_ResearchFields_mjr'].str.split('|')
+cit_pair_country = cit_pair_country.explode('cited_ResearchField')
 
 # Sankey diagram
 md_txt = '''
@@ -97,48 +99,52 @@ selected_fields = st.multiselect("Select disciplines:",
 article_type_options = pubs['Document Type'].dropna().unique().tolist()
 article_type = st.selectbox(label='Select an article type:', options=article_type_options, 
                             index=None, placeholder='Select an article type:', 
-                            key="article_type_selection3")
+                            key="article_type_selection1")
 
+df_data_pub_ids = None
 if len(selected_fields) == 0:
     selected_fields = kf_field_g.head(5).index.tolist()
     if article_type is None:
         article_type_str = 'All articles'
         df_data = kf_field.loc[kf_field['cited_ResearchField'].isin(selected_fields)]
+        df_data_pub_ids = df_data['cited_PublicationID'].unique().tolist()
     else:
         article_type_str = article_type
         df_data = kf_field.loc[kf_field['cited_ResearchField'].isin(selected_fields)]
         df_data = df_data.loc[df_data['Document Type'] == article_type]
+        df_data_pub_ids = df_data['cited_PublicationID'].unique().tolist()
 else:
     if article_type is None:
         article_type_str = 'All articles'
         df_data = kf_field.loc[kf_field['cited_ResearchField'].isin(selected_fields)]
+        df_data_pub_ids = df_data['cited_PublicationID'].unique().tolist()
     else:
         article_type_str = article_type
         df_data = kf_field.loc[kf_field['cited_ResearchField'].isin(selected_fields)]
         df_data = df_data.loc[df_data['Document Type'] == article_type]
+        df_data_pub_ids = df_data['cited_PublicationID'].unique().tolist()
 
+# df_tbl_out = [['Discipline', 'Closed Access/Open Access',
+#                'Number of Citing Disciplines', 'Number of Publications', 'Number of Citations', 
+#                'Evenness']]
+# for um_pub_field in selected_fields:
+#     um_selected = df_data.loc[df_data['cited_ResearchField']==um_pub_field]
+#     oa_types = um_selected['Is_OA'].unique().tolist()
+#     oa_types.sort()
+#     for oa_type in oa_types:
+#         um_selected2 = um_selected.loc[um_selected['Is_OA']==oa_type]
+#         n_pubs = um_selected2['cited_PublicationID'].nunique()
+#         n_cits = um_selected2['citing_PublicationID'].nunique()
 
-df_tbl_out = [['Discipline', 'Closed Access/Open Access',
-               'Number of Citing Disciplines', 'Number of Publications', 'Number of Citations', 
-               'Evenness']]
-for um_pub_field in selected_fields:
-    um_selected = df_data.loc[df_data['cited_ResearchField']==um_pub_field]
-    oa_types = um_selected['Is_OA'].unique().tolist()
-    oa_types.sort()
-    for oa_type in oa_types:
-        um_selected2 = um_selected.loc[um_selected['Is_OA']==oa_type]
-        n_pubs = um_selected2['cited_PublicationID'].nunique()
-        n_cits = um_selected2['citing_PublicationID'].nunique()
+#         um_selected_g = um_selected2.groupby('citing_ResearchField')[['citing_PublicationID']].nunique()
+#         n_citing_disc = len(um_selected_g)
+#         gini_cit = gini(um_selected_g['citing_PublicationID'].tolist())
 
-        um_selected_g = um_selected2.groupby('citing_ResearchField')[['citing_PublicationID']].nunique()
-        n_citing_disc = len(um_selected_g)
-        gini_cit = gini(um_selected_g['citing_PublicationID'].tolist())
+#         row = [um_pub_field, oa_type, n_citing_disc, n_pubs, n_cits, gini_cit]
+#         df_tbl_out.append(row)
 
-        row = [um_pub_field, oa_type, n_citing_disc, n_pubs, n_cits, gini_cit]
-        df_tbl_out.append(row)
-
-df_tbl_out = pd.DataFrame(df_tbl_out[1:], columns=df_tbl_out[0])
-df_tbl_out['Evenness'] = df_tbl_out['Evenness'].round(2)
+# df_tbl_out = pd.DataFrame(df_tbl_out[1:], columns=df_tbl_out[0])
+# df_tbl_out['Evenness'] = df_tbl_out['Evenness'].round(2)
 
 selected_fields_str = ', '.join(selected_fields)
 
@@ -354,7 +360,104 @@ The values ranges from 0 to 1. (0 = perfect equality; 1 = prefect inequality)
 '''
 #st.caption(md_txt)
 
-# Article level results
+
+# Map
+md_txt = f"""
+#### Countries Citing UM publications 
+"""
+st.markdown(md_txt)
+
+md_txt = f'''
+The two figures below show how knowledge from UM publications diffused to other countries. 
+Darker colors indicate a higher proportion of citations from a given country. 
+Compared with open-access articles, citations to non open-access articles are more 
+concentrated in the United States and China. This pattern suggests that open-access 
+articles may reach a broader international audience.
+'''
+st.markdown(md_txt)
+
+md_txt = f"""
+- Disciplines selected: {selected_fields_str}  
+- Article type selected: {article_type_str}
+"""
+st.markdown(md_txt)
+
+df_data_country = cit_pair_country.loc[cit_pair_country['cited_PublicationID'].isin(df_data_pub_ids)]
+#st.write(df_data_country.head())
+df_data_country_g = df_data_country.groupby(['citing_country', 
+                                             'Is_OA'])[['citing_PublicationID']].nunique()
+df_data_country_g = df_data_country_g.rename(columns={'citing_PublicationID': 'cit_count'})
+#df_data_country_g['log_cit_count'] = np.log2(df_data_country_g['cit_count'])
+df_data_country_g = df_data_country_g.reset_index()
+#st.write(df_data_country_g.head())
+
+country_open = df_data_country_g.loc[df_data_country_g['Is_OA']=='OA'].copy()
+country_open['pct_cit_count'] = country_open['cit_count']/country_open['cit_count'].sum()*100
+country_open['pct_cit_count'] = country_open['pct_cit_count'].round(2)
+
+country_closed = df_data_country_g.loc[df_data_country_g['Is_OA']=='Closed'].copy()
+country_closed['pct_cit_count'] = country_closed['cit_count']/country_closed['cit_count'].sum()*100
+country_closed['pct_cit_count'] = country_closed['pct_cit_count'].round(2)
+
+country_cit_pct_max = max([country_open['pct_cit_count'].max(), country_closed['pct_cit_count'].max()])
+country_cit_pct_min = min([country_open['pct_cit_count'].min(), country_closed['pct_cit_count'].min()])
+
+country_open_fig = px.choropleth(
+    country_open,
+    locations="citing_country",
+    locationmode="country names",
+    color="pct_cit_count", 
+    title='(a) Open Access Articles',
+    color_continuous_scale="OrRd",
+    range_color=(country_cit_pct_min, country_cit_pct_max), 
+    hover_data={'citing_country': True, 'pct_cit_count': ':.1f'}
+)
+
+country_closed_fig = px.choropleth(
+    country_closed,
+    locations="citing_country",
+    locationmode="country names",
+    color="pct_cit_count",
+    title='(b) Closed Access Articles',
+    color_continuous_scale="OrRd",
+    range_color=(country_cit_pct_min, country_cit_pct_max),
+    hover_data={'citing_country': True, 'pct_cit_count': ':.1f'}
+)
+
+for country_fig in [country_open_fig, country_closed_fig]:
+    country_fig.update_geos(
+        showland=True,
+        landcolor="rgba(255, 255, 255, 1)",
+        bgcolor="rgba(0, 0, 0, 0)",
+        domain=dict(y=[0.05, 0.95])
+    )
+    country_fig.update_layout(
+        height=600, 
+        margin=dict(t=30, b=10),
+        coloraxis_colorbar=dict(
+            orientation="h",
+            y=-0.15,      # move below plot
+            x=0.5,        # center horizontally
+            xanchor="center",
+            len=0.95,      # length of colorbar
+            title = 'Percentage of citations'
+        ), 
+        title=dict(
+            y=0.9
+        )
+    )
+    country_fig.update_traces(
+        hovertemplate=
+            "Country: %{location}<br>" +
+            "Percentag of Citations: %{z:.1f}<br>" +
+            "<extra></extra>"
+    )
+
+st.plotly_chart(country_open_fig, use_container_width=True)
+st.plotly_chart(country_closed_fig, use_container_width=True)    
+
+
+# Article Field Citation Ratio (FCR)
 md_txt = f"""
 #### Distribution of Articles' Field-Normalized Citation Metric Scores
 """
