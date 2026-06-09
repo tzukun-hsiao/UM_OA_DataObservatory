@@ -451,7 +451,7 @@ for country_fig in [country_open_fig, country_closed_fig]:
     country_fig.update_traces(
         hovertemplate=
             "Country: %{location}<br>" +
-            "Percentag of Citations: %{z:.1f}<br>" +
+            "Percentag of Citations: %{z:.1f}%<br>" +
             "<extra></extra>"
     )
 
