@@ -415,7 +415,7 @@ The vertical axis shows the publication year of the articles, and the horizontal
 Each bar represents the average number of citations received per article in a given citation year.
 Regarless of open access or not, anuual citations generally peak around 2-4 years after publication. 
 This pattern reflects the citation lifecycle of scholarly articles, in which research takes time to be discovered, 
-read, and incorporated into later studies.
+and incorporated into later studies.
 However, throughout the citation lifecycle, open-access articles generally receive more 
 citations per article than non open-access articles.
 """
