@@ -24,6 +24,10 @@ def load_data(file_name):
 
     return pd.read_csv(io.BytesIO(response.content))
 
+st.set_page_config(
+    page_title="UM OA Data Observatory",
+    layout="wide"
+)
 
 pubs = load_data(file_name='UM_publications_SelectedCols.csv')
 pubs['Is_OA'] = 'Closed'

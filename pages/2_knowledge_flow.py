@@ -40,6 +40,11 @@ def gini(input_vals):
     return gini_value
 
 
+st.set_page_config(
+    page_title="UM OA Data Observatory",
+    layout="wide"
+)
+
 pubs = load_data(file_name='UM_publications_SelectedCols.csv')
 pubs = pubs.rename(columns={'Publication ID': 'cited_PublicationID', 
                             'PubYear': 'cited_PubYear'})
