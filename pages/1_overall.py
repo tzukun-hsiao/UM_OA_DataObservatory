@@ -46,7 +46,7 @@ st.markdown(md_txt)
 
 md_txt = f"""
 Below is an interactive data observatory where you can explore open access trends by article type.   
-Simply select an article type from the dropdown menu below, and the plot will update automatically.
+Simply select an article type from the dropdown menu below, and the plots will update automatically.
 """
 st.markdown(md_txt)
 
