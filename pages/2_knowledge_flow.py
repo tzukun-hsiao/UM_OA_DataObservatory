@@ -419,6 +419,7 @@ read, and incorporated into later studies.
 However, throughout the citation lifecycle, open-access articles generally receive more 
 citations per article than non open-access articles.
 """
+st.markdown(md_txt)
 
 annual_data = kf_field.loc[kf_field['Document Type']=='Research Article']
 
@@ -478,7 +479,7 @@ fig.update_xaxes(
 )
 
 fig.update_layout(
-    height=100 * annual_data["cited_PubYear"].nunique(),
+    height=95 * annual_data["cited_PubYear"].nunique(),
     legend_title_text="OA Status",
     xaxis_title='Year',
     legend=dict(orientation="h", y=1.07, x=1.05, xanchor="right"),
