@@ -361,8 +361,6 @@ The values ranges from 0 to 1. (0 = perfect equality; 1 = prefect inequality)
 # Article level results
 md_txt = f"""
 #### Distribution of Articles' Field-Normalized Citation Metric Scores
-Disciplines selected: {selected_fields_str}  
-Article type selected: {article_type_str}
 """
 st.markdown(md_txt)
 
@@ -374,6 +372,8 @@ same year and in the same discipline.
 The FCR is normalized to 1.0. An FCR value of more than 1.0 shows that the publication has 
 a higher than average number of citations, comparing to other articles published in the same 
 year and in the same discipline.
+- Disciplines selected: {selected_fields_str}  
+- Article type selected: {article_type_str}
 """
 st.markdown(md_txt)
 
