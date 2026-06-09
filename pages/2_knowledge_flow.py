@@ -406,6 +406,7 @@ country_open_fig = px.choropleth(
     country_open,
     locations="citing_country",
     locationmode="country names",
+    #locationmode="ISO-3",
     color="pct_cit_count", 
     title='(a) Open Access Articles',
     color_continuous_scale="OrRd",
@@ -417,6 +418,7 @@ country_closed_fig = px.choropleth(
     country_closed,
     locations="citing_country",
     locationmode="country names",
+    #locationmode="ISO-3",
     color="pct_cit_count",
     title='(b) Closed Access Articles',
     color_continuous_scale="OrRd",
@@ -453,8 +455,8 @@ for country_fig in [country_open_fig, country_closed_fig]:
             "<extra></extra>"
     )
 
-st.plotly_chart(country_open_fig, use_container_width=True)
-st.plotly_chart(country_closed_fig, use_container_width=True)    
+st.plotly_chart(country_open_fig, width='stretch')
+st.plotly_chart(country_closed_fig, width='stretch')    
 
 
 # Article Field Citation Ratio (FCR)
