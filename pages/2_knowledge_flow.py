@@ -410,7 +410,7 @@ md_txt = f"""
 st.markdown(md_txt)
 
 md_txt = f"""
-Figure below presents the annual citations per article for open-access and non open-access articles..
+Figure below presents the annual citations per article for open-access and non open-access articles.
 The vertical axis shows the publication year of the articles, and the horizontal axis shows the citation year. 
 Each bar represents the average number of citations received per article in a given citation year.
 Regarless of open access or not, anuual citations generally peak around 2-4 years after publication. 
@@ -458,7 +458,7 @@ fig = px.bar(
 fig.update_traces(
     hovertemplate=
     "Citation year: %{x}<br>" +
-    "Citation per article: %{y:.1f}<br>" +
+    "Citations per article: %{y:.1f}<br>" +
     "OA Type: %{fullData.name}<br>" +
     "<extra></extra>"
 )
