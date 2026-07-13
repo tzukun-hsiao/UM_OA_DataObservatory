@@ -362,101 +362,101 @@ The values ranges from 0 to 1. (0 = perfect equality; 1 = prefect inequality)
 
 
 # Map
-md_txt = f"""
-#### Countries Citing UM publications 
-"""
-st.markdown(md_txt)
+# md_txt = f"""
+# #### Countries Citing UM publications 
+# """
+# st.markdown(md_txt)
 
-md_txt = f'''
-The two figures below show how knowledge from UM publications diffused to other countries. 
-Darker colors indicate a higher proportion of citations from a given country. 
-Compared with open-access articles, citations to non open-access articles are more 
-concentrated in the United States and China. This pattern suggests that open-access 
-articles may reach a broader international audience.
-'''
-st.markdown(md_txt)
+# md_txt = f'''
+# The two figures below show how knowledge from UM publications diffused to other countries. 
+# Darker colors indicate a higher proportion of citations from a given country. 
+# Compared with open-access articles, citations to non open-access articles are more 
+# concentrated in the United States and China. This pattern suggests that open-access 
+# articles may reach a broader international audience.
+# '''
+# st.markdown(md_txt)
 
-md_txt = f"""
-- Disciplines selected: {selected_fields_str}  
-- Article type selected: {article_type_str}
-"""
-st.markdown(md_txt)
+# md_txt = f"""
+# - Disciplines selected: {selected_fields_str}  
+# - Article type selected: {article_type_str}
+# """
+# st.markdown(md_txt)
 
-df_data_country = cit_pair_country.loc[cit_pair_country['cited_PublicationID'].isin(df_data_pub_ids)]
-#st.write(df_data_country.head())
-df_data_country_g = df_data_country.groupby(['citing_country', 
-                                             'Is_OA'])[['citing_PublicationID']].nunique()
-df_data_country_g = df_data_country_g.rename(columns={'citing_PublicationID': 'cit_count'})
-#df_data_country_g['log_cit_count'] = np.log2(df_data_country_g['cit_count'])
-df_data_country_g = df_data_country_g.reset_index()
-#st.write(df_data_country_g.head())
+# df_data_country = cit_pair_country.loc[cit_pair_country['cited_PublicationID'].isin(df_data_pub_ids)]
+# #st.write(df_data_country.head())
+# df_data_country_g = df_data_country.groupby(['citing_country', 
+#                                              'Is_OA'])[['citing_PublicationID']].nunique()
+# df_data_country_g = df_data_country_g.rename(columns={'citing_PublicationID': 'cit_count'})
+# #df_data_country_g['log_cit_count'] = np.log2(df_data_country_g['cit_count'])
+# df_data_country_g = df_data_country_g.reset_index()
+# #st.write(df_data_country_g.head())
 
-country_open = df_data_country_g.loc[df_data_country_g['Is_OA']=='OA'].copy()
-country_open['pct_cit_count'] = country_open['cit_count']/country_open['cit_count'].sum()*100
-country_open['pct_cit_count'] = country_open['pct_cit_count'].round(2)
+# country_open = df_data_country_g.loc[df_data_country_g['Is_OA']=='OA'].copy()
+# country_open['pct_cit_count'] = country_open['cit_count']/country_open['cit_count'].sum()*100
+# country_open['pct_cit_count'] = country_open['pct_cit_count'].round(2)
 
-country_closed = df_data_country_g.loc[df_data_country_g['Is_OA']=='Closed'].copy()
-country_closed['pct_cit_count'] = country_closed['cit_count']/country_closed['cit_count'].sum()*100
-country_closed['pct_cit_count'] = country_closed['pct_cit_count'].round(2)
+# country_closed = df_data_country_g.loc[df_data_country_g['Is_OA']=='Closed'].copy()
+# country_closed['pct_cit_count'] = country_closed['cit_count']/country_closed['cit_count'].sum()*100
+# country_closed['pct_cit_count'] = country_closed['pct_cit_count'].round(2)
 
-country_cit_pct_max = max([country_open['pct_cit_count'].max(), country_closed['pct_cit_count'].max()])
-country_cit_pct_min = min([country_open['pct_cit_count'].min(), country_closed['pct_cit_count'].min()])
+# country_cit_pct_max = max([country_open['pct_cit_count'].max(), country_closed['pct_cit_count'].max()])
+# country_cit_pct_min = min([country_open['pct_cit_count'].min(), country_closed['pct_cit_count'].min()])
 
-country_open_fig = px.choropleth(
-    country_open,
-    locations="citing_country",
-    locationmode="country names",
-    #locationmode="ISO-3",
-    color="pct_cit_count", 
-    title='(a) Open Access Articles',
-    color_continuous_scale="OrRd",
-    range_color=(country_cit_pct_min, country_cit_pct_max), 
-    hover_data={'citing_country': True, 'pct_cit_count': ':.1f'}
-)
+# country_open_fig = px.choropleth(
+#     country_open,
+#     locations="citing_country",
+#     locationmode="country names",
+#     #locationmode="ISO-3",
+#     color="pct_cit_count", 
+#     title='(a) Open Access Articles',
+#     color_continuous_scale="OrRd",
+#     range_color=(country_cit_pct_min, country_cit_pct_max), 
+#     hover_data={'citing_country': True, 'pct_cit_count': ':.1f'}
+# )
 
-country_closed_fig = px.choropleth(
-    country_closed,
-    locations="citing_country",
-    locationmode="country names",
-    #locationmode="ISO-3",
-    color="pct_cit_count",
-    title='(b) Closed Access Articles',
-    color_continuous_scale="OrRd",
-    range_color=(country_cit_pct_min, country_cit_pct_max),
-    hover_data={'citing_country': True, 'pct_cit_count': ':.1f'}
-)
+# country_closed_fig = px.choropleth(
+#     country_closed,
+#     locations="citing_country",
+#     locationmode="country names",
+#     #locationmode="ISO-3",
+#     color="pct_cit_count",
+#     title='(b) Closed Access Articles',
+#     color_continuous_scale="OrRd",
+#     range_color=(country_cit_pct_min, country_cit_pct_max),
+#     hover_data={'citing_country': True, 'pct_cit_count': ':.1f'}
+# )
 
-for country_fig in [country_open_fig, country_closed_fig]:
-    country_fig.update_geos(
-        showland=True,
-        landcolor="#808080",
-        bgcolor="#000000",
-        domain=dict(y=[0.05, 0.95])
-    )
-    country_fig.update_layout(
-        height=600, 
-        margin=dict(t=30, b=10),
-        coloraxis_colorbar=dict(
-            orientation="h",
-            y=-0.15,      # move below plot
-            x=0.5,        # center horizontally
-            xanchor="center",
-            len=0.95,      # length of colorbar
-            title = 'Percentage of citations'
-        ), 
-        title=dict(
-            y=0.9
-        )
-    )
-    country_fig.update_traces(
-        hovertemplate=
-            "Country: %{location}<br>" +
-            "Percentag of Citations: %{z:.1f}%<br>" +
-            "<extra></extra>"
-    )
+# for country_fig in [country_open_fig, country_closed_fig]:
+#     country_fig.update_geos(
+#         showland=True,
+#         landcolor="#808080",
+#         bgcolor="#000000",
+#         domain=dict(y=[0.05, 0.95])
+#     )
+#     country_fig.update_layout(
+#         height=600, 
+#         margin=dict(t=30, b=10),
+#         coloraxis_colorbar=dict(
+#             orientation="h",
+#             y=-0.15,      # move below plot
+#             x=0.5,        # center horizontally
+#             xanchor="center",
+#             len=0.95,      # length of colorbar
+#             title = 'Percentage of citations'
+#         ), 
+#         title=dict(
+#             y=0.9
+#         )
+#     )
+#     country_fig.update_traces(
+#         hovertemplate=
+#             "Country: %{location}<br>" +
+#             "Percentag of Citations: %{z:.1f}%<br>" +
+#             "<extra></extra>"
+#     )
 
-st.plotly_chart(country_open_fig, width='stretch')
-st.plotly_chart(country_closed_fig, width='stretch')    
+# st.plotly_chart(country_open_fig, width='stretch')
+# st.plotly_chart(country_closed_fig, width='stretch')    
 
 
 # Article Field Citation Ratio (FCR)
